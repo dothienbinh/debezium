@@ -1,0 +1,29 @@
+CREATE USER 'debezium'@'%' IDENTIFIED BY 'dbz';
+GRANT SELECT, RELOAD, SHOW DATABASES, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'debezium'@'%';
+FLUSH PRIVILEGES;
+
+
+curl -X POST http://localhost:8083/connectors \             
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "mysql-connector",
+    "config": {
+      "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+      "database.hostname": "test_typeorm-mysql-1",
+      "database.port": "3306",
+      "database.user": "debezium",
+      "database.password": "dbz",
+      "database.server.id": "184054",
+      "topic.prefix": "mysql-server",
+      "database.include.list": "test_typeorm",
+      "table.include.list": "test_typeorm.NewTable",
+      "database.history.kafka.bootstrap.servers": "kafka:9092",
+      "database.history.kafka.topic": "schema-changes.mysql"
+    }
+  }'
+
+
+mysql -u root -p
+
+curl http://localhost:8083/
+
