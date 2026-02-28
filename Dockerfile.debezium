@@ -1,0 +1,14 @@
+FROM debezium/connect:2.5
+
+ENV BOOTSTRAP_SERVERS=192.168.2.55:9092
+ENV GROUP_ID=1
+ENV CONFIG_STORAGE_TOPIC=connect_configs
+ENV OFFSET_STORAGE_TOPIC=connect_offsets
+ENV STATUS_STORAGE_TOPIC=connect_statuses
+
+ENV KEY_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+ENV VALUE_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+ENV KEY_CONVERTER_SCHEMAS_ENABLE=false
+ENV VALUE_CONVERTER_SCHEMAS_ENABLE=false
+
+EXPOSE 8083
