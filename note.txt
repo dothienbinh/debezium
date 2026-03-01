@@ -48,3 +48,6 @@ logs kafka:
 kafka-topics --bootstrap-server localhost:9092 --list
 docker exec -it mysql_container mysql -u root -p
 docker logs connect | tail -n 50
+docker exec -it postgres-db psql -U postgres -d student_db
+\dt
+\l
