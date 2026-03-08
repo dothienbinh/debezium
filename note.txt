@@ -31,10 +31,41 @@ curl -X POST http://localhost:8083/connectors \
 
         "topic.prefix": "cdc",
 
-        "schema.history.internal.kafka.bootstrap.servers": "${KAFKA_BOOTSTRAP_SERVERS}:9092",
+        "schema.history.internal.kafka.bootstrap.servers": "192.168.2.55:9092",
         "schema.history.internal.kafka.topic": "schema-changes.mysql"
       }
     }'
+
+curl -X POST http://localhost:8083/connectors \
+-H "Content-Type: application/json" \
+-d '{
+  "name": "postgres-file-records-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+
+    "database.hostname": "postgres-db",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "123456",
+    "database.dbname": "mydatabase",
+
+    "topic.prefix": "postgres",
+    "table.include.list": "public.file_records",
+
+    "plugin.name": "pgoutput",
+
+    "database.server.name": "postgres_server",
+
+    "schema.history.internal.kafka.bootstrap.servers": "192.168.1.198:9092",
+    "schema.history.internal.kafka.topic": "schema-changes.postgres",
+
+    "slot.name": "debezium_file_records_slot",
+    "publication.name": "dbz_publication",
+
+    "tombstones.on.delete": "false"
+  }
+}'
 
 logs kafka:
 
@@ -44,7 +75,28 @@ logs kafka:
   --topic cdc.test.users \
   --from-beginning
 
+kafka-consumer-groups.sh \
+  --bootstrap-server localhost:9092 \
+  --describe \
+  --group test_groupid
+
 /////
 kafka-topics --bootstrap-server localhost:9092 --list
 docker exec -it mysql_container mysql -u root -p
 docker logs connect | tail -n 50
+curl http://localhost:8083/connectors
+docker exec -it postgres-db psql -U postgres -d mydatabase
+
+services:
+  postgres-db:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: mydatabase
+    command: >
+      postgres
+      -c wal_level=logical
+      -c max_replication_slots=10
+      -c max_wal_senders=10
